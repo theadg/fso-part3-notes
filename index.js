@@ -27,23 +27,6 @@ app.use(cors())
  */
 app.use(express.static('dist'))
 
-// let notes = [
-//     {
-//         id: 1,
-//         content: "HTML is easy",
-//         important: true
-//     },
-//     {   
-//         id: 2,
-//         content: "Browser can execute only JavaScript",
-//         important: false
-//     },  
-//     {   
-//         id: 3,
-//         content: "GET and POST are the most important methods of HTTP protocol",
-//         important: true
-//     }
-// ]
 
 app.get('/', (request, response) => {
     response.send('<h1>Hello world from nodemon</h1>')
@@ -73,23 +56,31 @@ app.get('/api/notes', async (request, response) => {
     return response.json(notes);
 })
 
-app.get('/api/notes/:id', async (request, response) => {
+app.get('/api/notes/:id', async (request, response, next) => {
     const id = request.params.id
-    const note = await Note.findById(id);
+    try {
+        const note = await Note.findById(id);
 
-    if (!note) {
-        return response.status(404).send(`Note with ${id} not found`)
+        if (note) {
+            response.json(note)
+        } else {
+            response.status(404).end()
+        }
+    } catch (err) {
+        // response.status(400).send({ error: 'malformatted id' })
+        next(err)
     }
-
-    return response.json(note)
+    
+    // return response.json(note)
 })
 
-app.delete('/api/notes/:id', (request, response) => {
-    // no handling if note is missing
-    const id = Number(request.params.id)
-    notes = notes.filter(note => note.id !== id)
-
-    response.status(204).end()
+app.delete('/api/notes/:id', async (request, response, next) => {
+    try {
+        const note = await Note.findByIdAndDelete(request.params.id)
+        response.status(204).json({ 'message': `successfully deleted ${note}`}).end()
+    } catch (err) {
+        next(err)
+    }
 })
 
 const generateId = () => {
@@ -119,6 +110,43 @@ app.post('/api/notes', (request, response) => {
 
     response.json(note)
 })
+
+app.put('/api/notes/:id', async (request, response, next) => {
+    const body = request.body
+
+    const note = {
+        content: body.content,
+        important: body.important,
+    }
+
+    try {
+        const updatedNote = await Note.findByIdAndUpdate(request.params.id, note, { new: true })
+
+        response.json(updatedNote)
+    } catch (err) {
+        next(err)
+    }
+})
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
+
+// handler of requests with unknown endpoint
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError') {
+        return response.status(400).send({ error: 'malformatted id' })
+    } 
+
+    next(error)
+}
+
+// handler of requests with result to errors
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
