@@ -29,6 +29,7 @@ const note = new Note({
     newProp: 'this should not be added'
 })
 
+console.log(note)
 // note.save().then(result => {
 //     console.log('note saved!')
 //     console.log(result)
@@ -36,9 +37,9 @@ const note = new Note({
 // })
 
 const index = async () => {
-    const res = await Note.find({important: false});
+    const res = await Note.find({ important: false })
 
-    console.log(res);
+    console.log(res)
     mongoose.connection.close()
 }
 

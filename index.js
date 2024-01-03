@@ -27,7 +27,6 @@ app.use(cors())
  */
 app.use(express.static('dist'))
 
-
 app.get('/', (request, response) => {
     response.send('<h1>Hello world from nodemon</h1>')
 })
@@ -35,7 +34,7 @@ app.get('/', (request, response) => {
 app.post('/api/notes', async (request, response, next) => {
     const { body } = request
     const { content, important } = body
-    
+
     try {
         const newNote = new Note({
             content,
@@ -44,24 +43,23 @@ app.post('/api/notes', async (request, response, next) => {
 
         await newNote.save()
 
-        return response.json(newNote);
-    } catch(err) {
+        return response.json(newNote)
+    } catch (err) {
         next(err)
     }
-
-});
+})
 
 app.get('/api/notes', async (request, response) => {
-    const notes = await Note.find();
+    const notes = await Note.find()
 
     // * Return as JSON
-    return response.json(notes);
+    return response.json(notes)
 })
 
 app.get('/api/notes/:id', async (request, response, next) => {
     const id = request.params.id
     try {
-        const note = await Note.findById(id);
+        const note = await Note.findById(id)
 
         if (note) {
             response.json(note)
@@ -72,43 +70,38 @@ app.get('/api/notes/:id', async (request, response, next) => {
         // response.status(400).send({ error: 'malformatted id' })
         next(err)
     }
-    
+
     // return response.json(note)
 })
 
 app.delete('/api/notes/:id', async (request, response, next) => {
     try {
         const note = await Note.findByIdAndDelete(request.params.id)
-        response.status(204).json({ 'message': `successfully deleted ${note}`}).end()
+        response
+            .status(204)
+            .json({ message: `successfully deleted ${note}` })
+            .end()
     } catch (err) {
         next(err)
     }
 })
-
-const generateId = () => {
-    const maxId = notes.length > 0
-        ? Math.max(...notes.map(note => note.id))
-        : 0
-
-    return maxId + 1
-}
 
 app.put('/api/notes/:id', async (request, response, next) => {
     const { content, important } = request.body
 
     try {
         const updatedNote = await Note.findByIdAndUpdate(
-            request.params.id, 
+            request.params.id,
             {
                 content,
-                important
-            }, 
-            { 
-                new: true,
-                runValidators: true, 
-                context: 'query' 
+                important,
             },
-            )
+            {
+                new: true,
+                runValidators: true,
+                context: 'query',
+            }
+        )
 
         response.json(updatedNote)
     } catch (err) {
