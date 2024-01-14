@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-
+const User = require('../models/user')
 const noteSchema = new mongoose.Schema({
     content: {
         type: String,
@@ -7,6 +7,10 @@ const noteSchema = new mongoose.Schema({
         required: true
     },
     important: Boolean,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
 })
 
 // Return _id as id
